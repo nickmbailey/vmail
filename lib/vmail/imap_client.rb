@@ -28,6 +28,14 @@ module Vmail
       @current_mail = nil
       @current_message_uid = nil
       @width = 140
+
+      # decide if we should attempt growl notifications
+      begin
+        require 'growl'
+        @growl_present = true
+      rescue
+        @growl_present = false
+      end
     end
 
     # holds mail objects keyed by [mailbox, uid]
@@ -371,6 +379,11 @@ module Vmail
       if !new_ids.empty?
         self.max_seqno = new_ids[-1]
         res = fetch_row_text(new_ids, false, true)
+        if @growl_present
+          Growl.notify {
+              self.message = "#{res.split(%r{\n}).size} new message(s) in vmail."
+          }
+        end
         res
       else
         ''
